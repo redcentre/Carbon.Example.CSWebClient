@@ -9,6 +9,7 @@
     <IsPublishable>False</IsPublishable>
     <ProduceReferenceAssembly>False</ProduceReferenceAssembly>
     <Company>Red Centre Software</Company>
+    <AssemblyName>CSWebClient</AssemblyName>
   </PropertyGroup>
 
 </Project>
