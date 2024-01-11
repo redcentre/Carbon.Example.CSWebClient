@@ -64,6 +64,7 @@ internal class Program
 				await GetVartreeAsNodes();
 			}
 			await GenTab();
+			await GenJson();
 			await CloseJob();
 		}
 		await Logoff();
@@ -311,6 +312,53 @@ internal class Program
 			string body = await rm.Content.ReadAsStringAsync();
 			Verbose(body);
 		}
+	}
+
+	static async Task GenJson()
+	{
+		// THIS IS DUPLICATE CODE AND SUBJECT TO INVESTIGATION (SEE NOTE ABOVE).
+		var genTabRequest = new
+		{
+			name = "Report-2",
+			top = topVariable,
+			side = sideVariable,
+			filter,
+			weight,
+			sProps = new
+			{
+				caseFilter,
+				topInsert,
+				sideInsert,
+				level,
+				initAsMissing = true,
+				excludeNE = true,
+				padHierarchics = true,
+				arithOverStats = true
+			},
+			dProps = new
+			{
+				// TODO ????????????????????????????
+			}
+		};
+		async Task InnerPandas(int shape)
+		{
+			Sep($"Generate Cross-tabulation Report for Pandas shape {shape}");
+			rm = await client!.PostAsJsonAsync($"report/gentab/pandas/{shape}", genTabRequest);
+			if (rm.StatusCode != System.Net.HttpStatusCode.OK)
+			{
+				Warn($"Status code {rm.StatusCode}");
+				string errorBody = await rm.Content.ReadAsStringAsync();
+				Warn(errorBody);
+			}
+			else
+			{
+				string body = await rm.Content.ReadAsStringAsync();
+				Verbose(body);
+			}
+		}
+		await InnerPandas(1);
+		await InnerPandas(2);
+		await InnerPandas(3);
 	}
 
 	/// <summary>
