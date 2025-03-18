@@ -5,7 +5,7 @@
       // The following args are the defaults if none were specified.
       // Change the values for testing on a different service with
       // different credentials and report parameters.
-      "commandLineArgs": "/b https://rcsapps.azurewebsites.net/carbon/ /u guest /p guest /t Age /s Region /o csv"
+      "commandLineArgs": "/b https://rcsapps.azurewebsites.net/carbontest/ /u guest /p guest /t Age /s Region /o csv"
     }
   }
 }

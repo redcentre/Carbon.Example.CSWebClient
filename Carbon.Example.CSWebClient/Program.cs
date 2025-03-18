@@ -22,7 +22,7 @@ internal class Program
 	static JsonDocument? doc;
 	static HttpClient? client;
 
-	static string serverBaseUri = "https://rcsapps.azurewebsites.net/carbon/";
+	static string serverBaseUri = "https://rcsapps.azurewebsites.net/carbontest/";
 	static string loginUserName = "guest";
 	static string loginPassword = "guest";
 	static string topVariable = "age";
@@ -48,7 +48,7 @@ internal class Program
 			BaseAddress = new Uri(serverBaseUri)
 		};
 		await SanityCheckServiceInfo();
-		await AuthticateNameCredentials();
+		await StartNameSession();
 		AskForJobToOpen();
 		if (selectedJob != null)
 		{
@@ -67,7 +67,7 @@ internal class Program
 			await GenJson();
 			await CloseJob();
 		}
-		await Logoff();
+		await EndSession();
 		client.Dispose();
 		Pause();
 	}
@@ -126,11 +126,33 @@ internal class Program
 	/// also includes important account information such as a 'tree' of customers and child jobs
 	/// that the account may access.                                                             
 	/// </summary>
-	static async Task AuthticateNameCredentials()
+	static async Task StartNameSession()
 	{
 		Sep("Authenticate by account Name");
 		var authRequest = new { name = loginUserName, password = loginPassword, skipCache = true };
 		rm = await client!.PostAsJsonAsync("session/start/authenticate/name", authRequest);
+		if (rm.StatusCode == System.Net.HttpStatusCode.BadRequest)
+		{
+			string body = await rm.Content.ReadAsStringAsync();
+			var errdoc = JsonDocument.Parse(body);
+			int code = errdoc.RootElement.GetProperty("code").GetInt32();
+			string message = errdoc.RootElement.GetProperty("message").GetString()!;
+			string? detail = errdoc.RootElement.GetProperty("details").GetString();
+			if (code == 302)
+			{
+				Warn($"Code {code} - {message}");
+				Warn($"{detail}");
+				Info($"Do you want to close other sessions and continue? (y/n)");
+				string? r = Console.ReadLine();
+				if (r != "y") Fatal("You declined to close other sessions - Abort");
+				string[] ids = errdoc.RootElement.GetProperty("data").EnumerateArray().Select(x => x.GetString()!).ToArray();
+				string join = string.Join(",", ids);
+				rm = await client!.DeleteAsync($"session/force/{join}");
+				var doc = await CheckResponse(rm);
+				int count = doc.RootElement.GetInt32();
+				Info($"Force closed {count} sessions");
+			}
+		}
 		doc = await CheckResponse(rm);
 		sessionId = doc.RootElement.GetProperty("sessionId").GetString();
 		id = doc.RootElement.GetProperty("id").GetString();
@@ -378,13 +400,13 @@ internal class Program
 	/// Logoff doesn't actually do anything internally at the moment but it's included here for completeness.
 	/// It always returns -1 to indicate it's unused.
 	/// </summary>
-	static async Task Logoff()
+	static async Task EndSession()
 	{
-		Sep("End session and logoff");
-		rm = await client!.DeleteAsync("session/end/logoff");
+		Sep("End session");
+		rm = await client!.DeleteAsync("session/end");
 		doc = await CheckResponse(rm);
-		int count = doc.RootElement.GetInt32();
-		Info($"Logoff count -> {count}");
+		bool success = doc.RootElement.GetBoolean();
+		Info($"End session -> {success}");
 	}
 
 	#region Helpers
