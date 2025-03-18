@@ -397,8 +397,7 @@ internal class Program
 	}
 
 	/// <summary>
-	/// Logoff doesn't actually do anything internally at the moment but it's included here for completeness.
-	/// It always returns -1 to indicate it's unused.
+	/// Ends the session, which is important because in some services a single session usage may be enforced.
 	/// </summary>
 	static async Task EndSession()
 	{
