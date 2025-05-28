@@ -1,14 +1,14 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Text.Json;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Configuration;
 
-namespace Carbon.Example.CSWebClient;
+namespace RCS.Carbon.Example.CSWebClient;
 
 /// <summary>
 /// An example .NET client for the example Carbon web service that processes plain JSON
@@ -21,31 +21,46 @@ internal class Program
 	static HttpResponseMessage? rm;
 	static JsonDocument? doc;
 	static HttpClient? client;
-
-	static string serverBaseUri = "https://rcsapps.azurewebsites.net/carbontest/";
-	static string loginUserName = "guest";
-	static string loginPassword = "guest";
-	static string topVariable = "age";
-	static string sideVariable = "region";
-	static string? filter = null;
-	static string? weight = null;
-	static string outputFormat = "csv";
+	static IConfiguration? config;
 	const string SessionHeaderKey = "x-session-id";
 	static string? sessionId;
 	static string? id;
 	static string? name;
 	static string[]? roles;
-	static readonly List<Cust> customers = new();
+	static readonly List<Cust> customers = [];
 	static Job? selectedJob;
-	static JsonDocument? jobDoc;
 	static string[]? vartreeNames;
+
+	// The following parameters come from the settings file first, then the
+	// selected VS launch profile can override some values via the command
+	// line for testing of different service Uris.
+
+	static string? baseUri;
+	static string? loginUserName;
+	static string? loginPassword;
+	static string? topVariable;
+	static string? sideVariable;
+	static string? filter;
+	static string? weight;
+	static string? outputFormat;
 
 	static async Task Main(string[] args)
 	{
-		ParseArgs(args);
+		config = new ConfigurationBuilder()
+			.AddJsonFile("appsettings.json")
+			.AddCommandLine(args)
+			.Build();
+		baseUri = config["BaseUri"]!;
+		loginUserName = config["UserName"]!;
+		loginPassword = config["Password"]!;
+		topVariable = config["Top"]!;
+		sideVariable = config["Side"]!;
+		filter = config["Filter"];
+		weight = config["Weight"];
+		outputFormat = config["Format"]!;
 		client = new HttpClient
 		{
-			BaseAddress = new Uri(serverBaseUri)
+			BaseAddress = new Uri(baseUri)
 		};
 		await SanityCheckServiceInfo();
 		await StartNameSession();
@@ -73,28 +88,6 @@ internal class Program
 	}
 
 	/// <summary>
-	/// The command line args can overide the Red Centre Software example default values.
-	/// The args are in pairs in the format <c>/switch value</c>.
-	/// </summary>
-	static void ParseArgs(string[] args)
-	{
-		var tups = args.Select((a, i) => new { a, i }).ToArray();
-		string? GetVal(string name)
-		{
-			int? ix = tups.FirstOrDefault(t => Regex.IsMatch(t.a, $"^[/-]{name}$", RegexOptions.IgnoreCase))?.i;
-			return ix == null ? null : args.ElementAtOrDefault(ix.Value + 1);
-		}
-		serverBaseUri = GetVal("b") ?? serverBaseUri;
-		loginUserName = GetVal("u") ?? loginUserName;
-		loginPassword = GetVal("p") ?? loginPassword;
-		topVariable = GetVal("t") ?? topVariable;
-		sideVariable = GetVal("s") ?? sideVariable;
-		filter = GetVal("f") ?? filter;
-		weight = GetVal("w") ?? weight;
-		outputFormat = GetVal("o") ?? outputFormat;
-	}
-
-	/// <summary>
 	/// Attempt to retrieve metadata information about the web service to sanity
 	/// check it's reponding before continuing. Strange external errors can     
 	/// occur making the service call, so we catch anything and report it and
@@ -103,7 +96,7 @@ internal class Program
 	static async Task SanityCheckServiceInfo()
 	{
 		Sep("Service Info");
-		Info($"Attempt to contact service at {serverBaseUri}");
+		Info($"Attempt to contact service at {baseUri}");
 		try
 		{
 			rm = await client!.GetAsync("service/info");
@@ -247,7 +240,7 @@ internal class Program
 			getDrills = true
 		};
 		rm = await client!.PostAsJsonAsync("job/open", jobOpenRequest);
-		jobDoc = await CheckResponse(rm);
+		await CheckResponse(rm);
 	}
 
 	/// <summary>

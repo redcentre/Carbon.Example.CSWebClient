@@ -1,0 +1,16 @@
+{
+  "profiles": {
+    "carbontest": {
+      "commandName": "Project",
+      "commandLineArgs": "--BaseUri https://rcsapps.azurewebsites.net/carbontest/"
+    },
+    "localhost": {
+      "commandName": "Project",
+      "commandLineArgs": "--BaseUri http://localhost:5086/"
+    },
+    "carbon": {
+      "commandName": "Project",
+      "commandLineArgs": "--BaseUri https://rcsapps.azurewebsites.net/carbon/"
+    }
+  }
+}
