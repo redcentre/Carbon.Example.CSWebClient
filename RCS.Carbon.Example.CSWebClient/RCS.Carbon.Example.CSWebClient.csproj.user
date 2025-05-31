@@ -4,6 +4,6 @@
     <DebuggerFlavor>ProjectDebugger</DebuggerFlavor>
   </PropertyGroup>
   <PropertyGroup>
-    <ActiveDebugProfile>localhost</ActiveDebugProfile>
+    <ActiveDebugProfile>carbontest</ActiveDebugProfile>
   </PropertyGroup>
 </Project>

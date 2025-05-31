@@ -3,8 +3,8 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net8.0</TargetFramework>
-    <AssemblyVersion>1.0.2</AssemblyVersion>
-    <InformationalVersion>2025-05-05 10:28 GMT+10</InformationalVersion>
+    <AssemblyVersion>9.1.33</AssemblyVersion>
+    <InformationalVersion>2025-05-31 11:57 GMT+10</InformationalVersion>
     <Nullable>enable</Nullable>
     <IsPublishable>False</IsPublishable>
     <ProduceReferenceAssembly>False</ProduceReferenceAssembly>
