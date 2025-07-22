@@ -122,7 +122,7 @@ internal class Program
 	static async Task StartNameSession()
 	{
 		Sep("Authenticate by account Name");
-		var authRequest = new { name = loginUserName, password = loginPassword, skipCache = true };
+		var authRequest = new { name = loginUserName, password = loginPassword, skipCache = true, appId = "UnitTests" };
 		rm = await client!.PostAsJsonAsync("session/start/authenticate/name", authRequest);
 		if (rm.StatusCode == System.Net.HttpStatusCode.BadRequest)
 		{
